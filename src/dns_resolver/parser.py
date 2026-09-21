@@ -264,16 +264,17 @@ def format_rdata(record_type: RecordType, rdata: bytes) -> str:
     """
     Format RDATA for display based on record type
     
-    TODO: Implement formatters for:
-    - A: IPv4 address
-    - AAAA: IPv6 address
-    - NS/CNAME: Domain name
-    - MX: Preference + mail exchange
-    - TXT: Text data
-    - SOA: Complex multi-field record
+    TODO: NS/CNAME/MX/SOA need pointer-aware parsing (needs full packet + offset)
     """
-    return rdata.hex()  # Placeholder
-
+    if record_type == RecordType.A:
+        return parse_ipv4(rdata)
+    elif record_type == RecordType.AAAA:
+        return parse_ipv6(rdata)
+    elif record_type == RecordType.TXT:
+        length = rdata[0]
+        return rdata[1:1 + length].decode('ascii')
+    else:
+        return rdata.hex()  # Fallback for NS/CNAME/MX/SOA — not done yet
 
 def parse_ipv4(rdata: bytes) -> str:
     """Parse A record (4-byte IPv4 address)"""
