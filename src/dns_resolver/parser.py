@@ -76,7 +76,7 @@ class DNSRecord:
     ttl: int                   # Time to live
     rdlen: int                 # Resource data length
     rdata: bytes               # Raw resource data
-
+    rdata_offset: int = 0   # <-- NEW: byte offset in packet where rdata begins
 
 class DNSParser:
     """Parse and encode DNS messages per RFC 1035"""
@@ -179,20 +179,22 @@ class DNSParser:
         )
 
     def _parse_record(self) -> DNSRecord:
-        """Parse resource record (answer/authority/additional)"""
+        """Parse a resource record (answer, authority, additional)"""
         name = self._parse_name()
         type_val, cls_val, ttl = struct.unpack('!HHI', self._read_bytes(10))
         rdlen = struct.unpack('!H', self._read_bytes(2))[0]
+        rdata_offset = self.offset          # <-- NEW: remember where rdata starts
         rdata = self._read_bytes(rdlen)
 
         return DNSRecord(
-            name=name,
-            type=RecordType(type_val),
-            cls=RecordClass(cls_val),
-            ttl=ttl,
-            rdlen=rdlen,
-            rdata=rdata
-        )
+        name=name,
+        type=RecordType(type_val),
+        cls=RecordClass(cls_val),
+        ttl=ttl,
+        rdlen=rdlen,
+        rdata=rdata,
+        rdata_offset=rdata_offset        
+    )
 
     def _parse_name(self) -> str:
         """
