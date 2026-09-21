@@ -247,6 +247,18 @@ class DNSParser:
     # - encode_name() with pointer generation
     # - encode_record()
 
+    def parse_name_at(self, packet:bytes, offset:int)-> str:
+        """Parse a domain name starting at a specific offset within a given packet.Used for names embedded in RDATA (NS, CNAME, MX) that may contain compression pointers back into the full packet."""
+        saved_packet = self.packet
+        saved_offset = self.offset
+        self.packet = packet
+        self.offset = offset
+        name = self._parse_name()
+        self.packet = saved_packet
+        self.offset = saved_offset
+        return name
+
+
 
 class DNSEncoder:
     """Encode DNS messages per RFC 1035"""
