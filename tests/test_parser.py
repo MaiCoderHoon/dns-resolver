@@ -103,7 +103,7 @@ class TestDNSNameParsing:
         # Now create a name www with pointer to google.com
         # www = \x03www, then pointer to offset 12
         # Pointer format: 11xxxxxx xxxxxxxx (top 2 bits = 1, then 14-bit offset)
-        pointer = struct.pack('!H', 0xC00C)  # C0 = 11000000, 0C = offset 12
+        pointer = struct.pack('!H', 0xC012)  # C0 = 11000000, 12 = offset 18 (where google_com actually starts)
         
         www_pointer = b'\x03www' + pointer
         
