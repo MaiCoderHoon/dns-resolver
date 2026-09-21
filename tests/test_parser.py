@@ -20,7 +20,7 @@ import struct
 from pathlib import Path
 from src.dns_resolver.parser import (
     DNSParser, DNSHeader, DNSQuestion, DNSRecord,
-    RecordType, RecordClass, ResponseCode,
+    RecordType, RecordClass, ResponseCode, format_rdata,
     parse_ipv4, parse_ipv6
 )
 
@@ -177,6 +177,16 @@ class TestDNSRecordTypes:
         with pytest.raises(ValueError):
             parse_ipv6(b'\x01' * 15)  # Only 15 bytes
 
+    def test_format_rdata_txt(self):
+        """format_rdata should format A records as dotted IPv4"""
+        rdata = struct.pack('!BBBB', 142, 251, 32, 46)
+        assert format_rdata(RecordType.A, rdata) == '142.251.32.46'
+
+    def test_format_rdata_txt_record(self):
+        """format_rdata should decode TXT records"""
+        text = b'hello'
+        rdata = bytes([len(text)]) + text
+        assert format_rdata(RecordType.TXT, rdata) == 'hello'
 
 class TestCompleteMessage:
     """Test parsing complete DNS messages"""
