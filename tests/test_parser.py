@@ -188,6 +188,15 @@ class TestDNSRecordTypes:
         rdata = bytes([len(text)]) + text
         assert format_rdata(RecordType.TXT, rdata) == 'hello'
 
+    def test_format_rdata_cname_with_pointer(self):
+        """CNAME rdata containing a pointer should resolve correctly"""
+        google_com = b'\x06google\x03com\x00'
+        packet = b'\x00' * 12 + google_com  # google.com at offset 12
+        cname_rdata = struct.pack('!H', 0xC00C)  # pointer to offset 12
+
+        result = format_rdata(RecordType.CNAME, cname_rdata, packet=packet, rdata_offset=18)
+        assert result == 'google.com'
+
 class TestCompleteMessage:
     """Test parsing complete DNS messages"""
 
