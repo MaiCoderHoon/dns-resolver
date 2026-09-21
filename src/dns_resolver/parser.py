@@ -272,11 +272,13 @@ class DNSEncoder:
 
 
 # Utility functions
-def format_rdata(record_type: RecordType, rdata: bytes) -> str:
+def format_rdata(record_type: RecordType, rdata: bytes, 
+                  packet: bytes = None, rdata_offset: int = None) -> str:
     """
-    Format RDATA for display based on record type
+    Format RDATA for display based on record type.
     
-    TODO: NS/CNAME/MX/SOA need pointer-aware parsing (needs full packet + offset)
+    packet and rdata_offset are needed for NS/CNAME/MX since their
+    names may contain compression pointers into the full packet.
     """
     if record_type == RecordType.A:
         return parse_ipv4(rdata)
@@ -285,8 +287,20 @@ def format_rdata(record_type: RecordType, rdata: bytes) -> str:
     elif record_type == RecordType.TXT:
         length = rdata[0]
         return rdata[1:1 + length].decode('ascii')
+    elif record_type in (RecordType.NS, RecordType.CNAME):
+        if packet is None or rdata_offset is None:
+            return rdata.hex()  # can't resolve pointers without full packet context
+        parser = DNSParser()
+        return parser.parse_name_at(packet, rdata_offset)
+    elif record_type == RecordType.MX:
+        if packet is None or rdata_offset is None:
+            return rdata.hex()
+        preference = struct.unpack('!H', rdata[:2])[0]
+        parser = DNSParser()
+        exchange = parser.parse_name_at(packet, rdata_offset + 2)
+        return f"{preference} {exchange}"
     else:
-        return rdata.hex()  # Fallback for NS/CNAME/MX/SOA — not done yet
+        return rdata.hex()
 
 def parse_ipv4(rdata: bytes) -> str:
     """Parse A record (4-byte IPv4 address)"""
