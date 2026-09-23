@@ -258,12 +258,24 @@ class TestRealDNSResponses:
 
 class TestDNSEncoder:
     """Test DNS name encoding with compression pointer generation"""
-
     def test_encode_name_simple(self):
-        ...
+        """Encode a simple name with no prior context"""
+        from src.dns_resolver.parser import DNSEncoder
+        encoder = DNSEncoder()
+        result = encoder.encode_name('google.com')
+        assert result == b'\x06google\x03com\x00'
 
     def test_encode_name_with_compression(self):
-        ...
+        """Second name sharing a suffix should use a pointer"""
+        from src.dns_resolver.parser import DNSEncoder
+        encoder = DNSEncoder()
+        
+        first = encoder.encode_name('google.com')
+        encoder.packet += first  # simulate writing it into the real packet
+        
+        second = encoder.encode_name('www.google.com')
+        # "www" written as label, then pointer back to offset 0 (where google.com started)
+        assert second == b'\x03www' + struct.pack('!H', 0xC000)
 
 # Test fixtures for common data
 @pytest.fixture
