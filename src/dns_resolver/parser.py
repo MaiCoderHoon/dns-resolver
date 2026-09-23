@@ -274,14 +274,13 @@ class DNSEncoder:
 
 
 # Utility functions
-def format_rdata(record_type: RecordType, rdata: bytes, 
-                  packet: bytes = None, rdata_offset: int = None) -> str:
     """
     Format RDATA for display based on record type.
     
     packet and rdata_offset are needed for NS/CNAME/MX since their
     names may contain compression pointers into the full packet.
     """
+def format_rdata(record_type: RecordType, rdata: bytes, packet: bytes = None, rdata_offset: int = None) -> str:
     if record_type == RecordType.A:
         return parse_ipv4(rdata)
     elif record_type == RecordType.AAAA:
@@ -291,7 +290,7 @@ def format_rdata(record_type: RecordType, rdata: bytes,
         return rdata[1:1 + length].decode('ascii')
     elif record_type in (RecordType.NS, RecordType.CNAME):
         if packet is None or rdata_offset is None:
-            return rdata.hex()  # can't resolve pointers without full packet context
+            return rdata.hex()
         parser = DNSParser()
         return parser.parse_name_at(packet, rdata_offset)
     elif record_type == RecordType.MX:
@@ -299,7 +298,7 @@ def format_rdata(record_type: RecordType, rdata: bytes,
             return rdata.hex()
         preference = struct.unpack('!H', rdata[:2])[0]
         parser = DNSParser()
-        exchange = parser.parse_name_at(packet, rdata_offset + 2)
+        exchange = parser.parse_name_at(packet, rdata_offset + 2)  # +2 skips preference field
         return f"{preference} {exchange}"
     else:
         return rdata.hex()
