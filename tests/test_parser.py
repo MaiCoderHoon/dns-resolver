@@ -203,6 +203,22 @@ class TestDNSRecordTypes:
         result = format_rdata(RecordType.CNAME, cname_rdata, packet=packet, rdata_offset=rdata_offset)
         assert result == 'google.com'
 
+    def test_format_rdata_mx_with_pointer(self):
+        #MX rdata containing preference and pointer should resolve correctly
+        google_com = b'\x06google\x03com\x00'
+        preference = struct.pack('!H', 10)
+        pointer = struct.pack('!H', 0xC00C)  # points to offset 12
+
+        # Packet layout: [12-byte header][google.com][preference][pointer]
+        packet = b'\x00' * 12 + google_com + preference + pointer
+        # google_com: offset 12-23, preference: offset 24-25, pointer: offset 26-27
+
+        rdata_offset = 24   # rdata starts where preference begins
+        mx_rdata = preference + pointer
+
+        result = format_rdata(RecordType.MX, mx_rdata, packet=packet, rdata_offset=rdata_offset)
+        assert result == '10 google.com'
+
 class TestCompleteMessage:
     """Test parsing complete DNS messages"""
 
