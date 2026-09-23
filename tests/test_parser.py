@@ -256,6 +256,14 @@ class TestRealDNSResponses:
         """Parse real response for github.com NS query"""
         pass
 
+class TestDNSEncoder:
+    """Test DNS name encoding with compression pointer generation"""
+
+    def test_encode_name_simple(self):
+        ...
+
+    def test_encode_name_with_compression(self):
+        ...
 
 # Test fixtures for common data
 @pytest.fixture

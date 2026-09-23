@@ -14,6 +14,7 @@ import struct
 from dataclasses import dataclass
 from typing import List, Tuple, Dict, Optional
 from enum import IntEnum
+from unicodedata import name
 
 
 # DNS Record Types
@@ -272,6 +273,33 @@ class DNSEncoder:
     # TODO: Implement encoder
     # This will be used by Ayush to construct queries
 
+    def encode_name(self, name: str) -> bytes:
+        """Encode a domain name into DNS wire format, using compression pointers when a suffix has already been written earlier in the packet."""
+        if name == '':
+            return b'\x00'  # root domain
+
+        labels = name.split('.')
+        encoded = b''
+
+        for i in range(len(labels)):
+            suffix = '.'.join(labels[i:])  # e.g. "google.com", then "com"
+            current_offset = len(self.packet) + len(encoded)
+
+            if suffix in self.name_offsets:
+                # We've seen this suffix before — write a pointer instead of repeating it
+                pointer_offset = self.name_offsets[suffix]
+                pointer = 0xC000 | pointer_offset  # top 2 bits = 11, rest = offset
+                encoded += struct.pack('!H', pointer)
+                return encoded  # pointer always terminates the name
+
+            # New suffix — remember where we're about to write it
+            self.name_offsets[suffix] = current_offset
+
+            label = labels[i]
+            encoded += bytes([len(label)]) + label.encode('ascii')
+
+        encoded += b'\x00'  # no pointer was used, so terminate normally
+        return encoded
 
 # Utility functions
     """
