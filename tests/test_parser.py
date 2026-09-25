@@ -285,6 +285,29 @@ class TestRealDNSResponses:
             print(f"{ans.name} {ans.ttl} IN {ans.type.name} "
                   f"{format_rdata(ans.type, ans.rdata, packet=data, rdata_offset=ans.rdata_offset)}")
 
+    def test_parse_google_aaaa_response(self):
+        """Parse real response for google.com AAAA query"""
+        filepath = Path(__file__).parent.parent / 'docs' / 'responses' / 'google.com-AAAA.bin'
+        if not filepath.exists():
+            pytest.skip("Run scripts/capture_real_response.py first")
+        
+        with open(filepath, 'rb') as f:
+            data = f.read()
+
+        parser = DNSParser()
+        header, questions, answers, authority, additional = parser.parse_message(data)
+
+        assert header.qr == True
+        assert header.rcode == ResponseCode.NOERROR
+        assert questions[0].qname == 'google.com'
+        assert len(answers) >= 1
+        
+        for ans in answers:
+            formatted = format_rdata(ans.type, ans.rdata, packet=data, rdata_offset=ans.rdata_offset)
+            print(f"{ans.name} {ans.ttl} IN {ans.type.name} {formatted}")
+            if ans.type == RecordType.AAAA:
+                assert ':' in formatted
+                
 class TestDNSEncoder:
     """Test DNS name encoding with compression pointer generation"""
     def test_encode_name_simple(self):

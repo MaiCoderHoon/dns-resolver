@@ -43,3 +43,8 @@ def capture(domain: str, record_type: RecordType, nameserver: str = "8.8.8.8"):
 if __name__ == '__main__':
     capture('google.com', RecordType.A)
     capture('github.com', RecordType.NS)
+
+if __name__ == '__main__':
+    capture('google.com', RecordType.A)
+    capture('github.com', RecordType.NS)
+    capture('google.com', RecordType.AAAA) 
