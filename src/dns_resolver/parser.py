@@ -323,6 +323,20 @@ class DNSEncoder:
         self.packet += name_bytes  # so subsequent names can compress against this
         type_class = struct.pack('!HH', question.qtype, question.qclass)
         return name_bytes + type_class
+
+    def encode_message(self, header: DNSHeader, questions: List[DNSQuestion]) -> bytes:
+        """Encode a complete DNS query message (header + questions)"""
+        self.packet = b''
+        self.name_offsets = {}
+        
+        header_bytes = self.encode_header(header)
+        self.packet += header_bytes
+        
+        question_bytes = b''
+        for q in questions:
+            question_bytes += self.encode_question(q)
+        
+        return header_bytes + question_bytes
     
 # Utility functions
     """
