@@ -277,6 +277,26 @@ class TestDNSEncoder:
         # "www" written as label, then pointer back to offset 0 (where google.com started)
         assert second == b'\x03www' + struct.pack('!H', 0xC000)
 
+    def test_encode_header(self):
+        """Encoding a header should be the exact reverse of parsing it"""
+        from src.dns_resolver.parser import DNSEncoder, DNSHeader, ResponseCode
+        
+        header = DNSHeader(
+            id=1, qr=False, opcode=0, aa=False, tc=False,
+            rd=True, ra=False, rcode=ResponseCode.NOERROR,
+            qdcount=1, ancount=0, nscount=0, arcount=0
+        )
+        
+        encoder = DNSEncoder()
+        result = encoder.encode_header(header)
+        
+        # Round-trip check: parse what we just encoded, should match original
+        parser = DNSParser()
+        parser.packet = result
+        parsed_header = parser._parse_header()
+        
+        assert parsed_header == header
+
 # Test fixtures for common data
 @pytest.fixture
 def simple_query():
