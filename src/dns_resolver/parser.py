@@ -316,6 +316,13 @@ class DNSEncoder:
             header.id, flags, 
             header.qdcount, header.ancount, 
             header.nscount, header.arcount)
+
+    def encode_question(self, question: DNSQuestion) -> bytes:
+        """Encode a DNS question section"""
+        name_bytes = self.encode_name(question.qname)
+        self.packet += name_bytes  # so subsequent names can compress against this
+        type_class = struct.pack('!HH', question.qtype, question.qclass)
+        return name_bytes + type_class
     
 # Utility functions
     """
