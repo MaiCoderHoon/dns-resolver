@@ -301,6 +301,22 @@ class DNSEncoder:
         encoded += b'\x00'  # no pointer was used, so terminate normally
         return encoded
 
+    def encode_header(self, header: DNSHeader) -> bytes:
+        """Pack a DNSHeader back into 12 bytes of wire format"""
+        flags = 0
+        flags |= (int(header.qr) << 15)
+        flags |= (header.opcode << 11)
+        flags |= (int(header.aa) << 10)
+        flags |= (int(header.tc) << 9)
+        flags |= (int(header.rd) << 8)
+        flags |= (int(header.ra) << 7)
+        flags |= int(header.rcode)
+
+        return struct.pack('!HHHHHH', 
+            header.id, flags, 
+            header.qdcount, header.ancount, 
+            header.nscount, header.arcount)
+    
 # Utility functions
     """
     Format RDATA for display based on record type.
