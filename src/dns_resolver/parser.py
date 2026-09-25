@@ -182,7 +182,7 @@ class DNSParser:
     def _parse_record(self) -> DNSRecord:
         """Parse a resource record (answer, authority, additional)"""
         name = self._parse_name()
-        type_val, cls_val, ttl = struct.unpack('!HHI', self._read_bytes(10))
+        type_val, cls_val, ttl = struct.unpack('!HHI', self._read_bytes(8))
         rdlen = struct.unpack('!H', self._read_bytes(2))[0]
         rdata_offset = self.offset          # <-- NEW: remember where rdata starts
         rdata = self._read_bytes(rdlen)

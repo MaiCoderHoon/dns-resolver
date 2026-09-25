@@ -244,17 +244,46 @@ class TestCompleteMessage:
 class TestRealDNSResponses:
     """Test against captured real DNS responses"""
 
-    @pytest.mark.skipif(True, reason="Responses not captured yet - see capture_dns_responses.py")
     def test_parse_google_a_response(self):
         """Parse real response for google.com A query"""
-        # This will be populated once we capture real responses
-        # See docs/responses/google.com-A.bin
-        pass
+        filepath = Path(__file__).parent.parent / 'docs' / 'responses' / 'google.com-A.bin'
+        if not filepath.exists():
+            pytest.skip("Run scripts/capture_real_response.py first")
+        
+        with open(filepath, 'rb') as f:
+            data = f.read()
 
-    @pytest.mark.skipif(True, reason="Responses not captured yet")
+        parser = DNSParser()
+        header, questions, answers, authority, additional = parser.parse_message(data)
+
+        assert header.qr == True
+        assert header.rcode == ResponseCode.NOERROR
+        assert questions[0].qname == 'google.com'
+        assert len(answers) >= 1
+        
+        for ans in answers:
+            print(f"{ans.name} {ans.ttl} IN {ans.type.name} "
+                  f"{format_rdata(ans.type, ans.rdata, packet=data, rdata_offset=ans.rdata_offset)}")
+
     def test_parse_github_ns_response(self):
         """Parse real response for github.com NS query"""
-        pass
+        filepath = Path(__file__).parent.parent / 'docs' / 'responses' / 'github.com-NS.bin'
+        if not filepath.exists():
+            pytest.skip("Run scripts/capture_real_response.py first")
+        
+        with open(filepath, 'rb') as f:
+            data = f.read()
+
+        parser = DNSParser()
+        header, questions, answers, authority, additional = parser.parse_message(data)
+
+        assert header.qr == True
+        assert questions[0].qname == 'github.com'
+        assert len(answers) >= 1
+        
+        for ans in answers:
+            print(f"{ans.name} {ans.ttl} IN {ans.type.name} "
+                  f"{format_rdata(ans.type, ans.rdata, packet=data, rdata_offset=ans.rdata_offset)}")
 
 class TestDNSEncoder:
     """Test DNS name encoding with compression pointer generation"""
