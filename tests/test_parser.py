@@ -313,6 +313,30 @@ class TestDNSEncoder:
         
         assert parsed_question == question
 
+    def test_encode_message_full_query(self):
+        """Build a complete query, encode it, then parse it back — full round trip"""
+        from src.dns_resolver.parser import DNSEncoder, DNSHeader, DNSQuestion, RecordType, RecordClass, ResponseCode
+        
+        header = DNSHeader(
+            id=1234, qr=False, opcode=0, aa=False, tc=False,
+            rd=True, ra=False, rcode=ResponseCode.NOERROR,
+            qdcount=1, ancount=0, nscount=0, arcount=0
+        )
+        question = DNSQuestion(qname='google.com', qtype=RecordType.A, qclass=RecordClass.IN)
+        
+        encoder = DNSEncoder()
+        message = encoder.encode_message(header, [question])
+        
+        # Now parse it back fully
+        parser = DNSParser()
+        parsed_header, parsed_questions, answers, authority, additional = parser.parse_message(message)
+        
+        assert parsed_header.id == 1234
+        assert parsed_header.rd == True
+        assert len(parsed_questions) == 1
+        assert parsed_questions[0].qname == 'google.com'
+        assert parsed_questions[0].qtype == RecordType.A
+
 # Test fixtures for common data
 @pytest.fixture
 def simple_query():
