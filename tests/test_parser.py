@@ -297,6 +297,22 @@ class TestDNSEncoder:
         
         assert parsed_header == header
 
+    def test_encode_question(self):
+        """Encoding a question should round-trip through the parser correctly"""
+        from src.dns_resolver.parser import DNSEncoder, DNSQuestion, RecordType, RecordClass
+        
+        question = DNSQuestion(qname='google.com', qtype=RecordType.A, qclass=RecordClass.IN)
+        
+        encoder = DNSEncoder()
+        result = encoder.encode_question(question)
+        
+        parser = DNSParser()
+        parser.packet = result
+        parser.offset = 0
+        parsed_question = parser._parse_question()
+        
+        assert parsed_question == question
+
 # Test fixtures for common data
 @pytest.fixture
 def simple_query():
